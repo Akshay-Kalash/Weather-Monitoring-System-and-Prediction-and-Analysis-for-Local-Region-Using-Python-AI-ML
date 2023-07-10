@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.impute import SimpleImputer
 import requests
 import joblib
@@ -27,13 +28,16 @@ def handle_missing_values(X):
     X = imputer.fit_transform(X)
     return X
 
-# Load the trained model
-def load_model():
-    model = joblib.load('random_forest_regressor_model.pkl')
-    return model
+# Load the trained models
+def load_models():
+    models = []
+    for i in range(5):
+        model = joblib.load(f'gradient_boosting_regressor_model_{i+1}.pkl')
+        models.append(model)
+    return models
 
-# Load the model
-model = load_model()
+# Load the models
+models = load_models()
 
 # ThingSpeak configuration
 channel_id = '2190048'
@@ -51,10 +55,10 @@ X = np.array(features)
 # Handle missing values in the features
 X = handle_missing_values(X)
 
-# Make predictions
-predicted_values = model.predict(X)
+# Make predictions for each target variable
+predicted_values = np.array([model.predict(X) for model in models])
 
 # Print the predicted values for each field
 field_names = ['Temperature', 'Humidity', 'Pressure', 'Light Intensity', 'Altitude']
-for field, values in zip(field_names, predicted_values.T):
+for field, values in zip(field_names, predicted_values):
     print(f"Predicted {field}: {values}")
